@@ -1,25 +1,43 @@
-<dependency>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-starter-web</artifactId>
-</dependency>
+# ==========================================
+# Spring Boot Web 服务配置
+# ==========================================
+server:
+  port: 8080
 
-<dependency>
-<groupId>org.springframework.integration</groupId>
-<artifactId>spring-integration-mqtt</artifactId>
-</dependency>
+spring:
+  application:
+    name: esp32-iot-backend
 
-<dependency>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-starter-websocket</artifactId>
-</dependency>
+# ==========================================
+# 自定义 MQTT 核心参数映射
+# 这些参数会在 Java 代码中用 @Value("${mqtt.xxx}") 动态注入
+# ==========================================
+mqtt:
+  # EMQX 服务器地址
+  # 注：为了后端调试方便，我们这里暂用 tcp 明文连接。
+  # 因为服务器跑在你自己的电脑上，属于相对安全的内网环境。
+  url: tcp://broker.emqx.io:1883
+  
+  # 后端 Client ID 极其重要：必须全局唯一！绝不能和单片机的 ID 撞车，否则会互相踢下线
+  client-id: springboot-iot-center-888
+  
+  # 主题路由配置
+  topic:
+    # 后端上行监听主题（使用 '+' 通配符，这样无论有多少块 ESP32，只要它在这个层级，后端全能收到）
+    state-sub: device/esp32s3/+/state
+    # 后端下发指令的主题前缀（发指令时，在代码里动态拼接具体设备的 MAC 地址）
+    command-pub-prefix: device/esp32s3/
 
-<dependency>
-<groupId>org.projectlombok</groupId>
-<artifactId>lombok</artifactId>
-<optional>true</optional>
-</dependency>
+  # 连接池控制（防止网络抖动导致的连接挂死）
+  completion-timeout: 3000
+  keep-alive: 15
 
-<dependency>
-<groupId>com.fasterxml.jackson.core</groupId>
-<artifactId>jackson-databind</artifactId>
-</dependency>
+  # ota远程升级固件存放位置
+  # iot:
+  #  storage:
+  #    type: local  # 以后可以改为 oss, minio 等
+  #    local:
+        # 固件在服务器硬盘上的物理路径（根据你的系统修改，如 D:/iot/firmware/ 或 /opt/iot/fw/）
+  #      upload-dir: ./uploads/firmware/
+        # 固件下载的 URL 前缀
+  #      download-url-prefix: http://你的公网IP:8080/fw/download/

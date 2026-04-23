@@ -37,3 +37,8 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### 暂时挂起 FOTA 模块的相关配置 ###
+**/WebMvcConfig.java
+**/LocalStorageServiceImpl.java
+**/StorageService.java
