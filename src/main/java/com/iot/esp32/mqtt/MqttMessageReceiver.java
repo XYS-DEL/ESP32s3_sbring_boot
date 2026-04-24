@@ -2,12 +2,16 @@ package com.iot.esp32.mqtt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iot.esp32.model.dto.DeviceStateDto;
+import com.iot.esp32.service.DeviceManagerService;
+import com.iot.esp32.service.TelemetryService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.mqtt.support.MqttHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class MqttMessageReceiver {
 
@@ -15,6 +19,13 @@ public class MqttMessageReceiver {
     @Autowired
     private ObjectMapper objectMapper;
 
+    // 注入设备状态管理服务
+    @Autowired
+    private DeviceManagerService deviceManagerService;
+
+    // 引入 TelemetryService
+    @Autowired
+    private TelemetryService telemetryService;
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public void handleMessage(Message<?> message) {
 
@@ -23,32 +34,35 @@ public class MqttMessageReceiver {
 
         // 提取 MAC 地址 (从 device/esp32s3/ESP32S3-MAC/state 中截取)
         String[] topicParts = topic.split("/");
-        String macAddress = topicParts.length > 2 ? topicParts[2] : "UNKNOWN";
+        String rawMac = topicParts.length > 2 ? topicParts[2] : "UNKNOWN";
+
+        // 剔除 "ESP32S3-" 前缀，保证存入 MySQL 的是纯净的物理 MAC 地址 (如 E83DC1FA71BC)
+        String macAddress = rawMac.replace("ESP32S3-", "");
 
         try {
             // JSON 字符串一键反序列化为 Java 对象
             DeviceStateDto dto = objectMapper.readValue(payload, DeviceStateDto.class);
 
-            System.out.println("==================================================");
-            System.out.println("[成功解析设备上报数据] 设备ID: " + macAddress);
+            // 只要报文里带有 status 字段，立刻调用 Service 进行数据库落盘！
+            if (dto.getStatus() != null) {
+                deviceManagerService.upsertDeviceStatus(macAddress, dto.getStatus());
+            }
 
             // 业务路由分发
             if ("offline".equals(dto.getStatus())) {
-                System.out.println("警报：设备已掉线 (LWT遗嘱触发)！");
-                // TODO: 去数据库把该设备标记为离线
+                log.warn("警报：设备 [{}] 已掉线 (LWT遗嘱触发)！", macAddress);
             } else if ("online".equals(dto.getStatus())) {
-                System.out.println("提示：设备重新上线！");
-                // TODO: 去数据库把该设备标记为在线
+                log.info("提示：设备 [{}] 重新上线！", macAddress);
             } else {
                 // 如果既不是纯粹的 online 也不是 offline，那就是正常的遥测数据包了
-                System.out.println(" 遥测数据 -> 温度: " + dto.getTemp() + "°C | 信号: " + dto.getRssi() + "dBm | 内存: " + dto.getHeapKb() + "KB");
-                // TODO: 存入 InfluxDB 时序数据库
+                log.info("设备 [{}] 遥测数据 -> 温度: {}°C | 信号: {}dBm | 内存: {}KB",
+                        macAddress, dto.getTemp(), dto.getRssi(), dto.getHeapKb());
+                telemetryService.saveTelemetry(macAddress, dto.getTemp(), dto.getHeapKb(), dto.getRssi());
             }
-            System.out.println("==================================================\n");
 
         } catch (Exception e) {
-            System.err.println("JSON 解析失败！原文: " + payload);
-            e.printStackTrace();
+            // 打印错误日志并将异常堆栈对象 e 传入，底层会自动格式化输出错误细节
+            log.error("JSON 解析失败！原文: {}", payload, e);
         }
     }
 }
