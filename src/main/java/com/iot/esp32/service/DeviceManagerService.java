@@ -17,7 +17,7 @@ public class DeviceManagerService {
     private IotDeviceMapper deviceMapper;
 
     /**
-     * 处理设备的状态流转（上线/离线）与自动注册
+     * 处理设备的状态流转（上线/离线）与自动注册 + 自动提取固件版本号
      */
     public void upsertDeviceStatus(String macAddress, String status) {
         // 1. 去数据库里查查，有没有这台设备
@@ -35,6 +35,14 @@ public class DeviceManagerService {
             device.setLastActiveTime(now);
             device.setCreateTime(now);
 
+            // 自动提取固件版本号
+            if (status != null && status.startsWith("online_OTA_")) {
+                String fwVer = status.replace("online_OTA_", "");
+                device.setCurrentFwVer(fwVer);
+            } else if ("online".equals(status)) {
+                device.setCurrentFwVer("V1.0(Base)");
+            }
+
             // 执行 INSERT
             deviceMapper.insert(device);
             log.info("[自动注册] 发现全新 ESP32 节点并已建档，MAC: {}", macAddress);
@@ -43,6 +51,14 @@ public class DeviceManagerService {
             // 3. 更新状态
             device.setStatus(status);
             device.setLastActiveTime(now);
+
+            // 自动提取固件版本号
+            if (status != null && status.startsWith("online_OTA_")) {
+                String fwVer = status.replace("online_OTA_", "");
+                device.setCurrentFwVer(fwVer);
+            } else if ("online".equals(status)) {
+                device.setCurrentFwVer("V1.0(Base)");
+            }
 
             // 执行 UPDATE
             deviceMapper.updateById(device);

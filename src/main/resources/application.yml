@@ -14,11 +14,10 @@ spring:
   # MySQL 关系型数据库配置
   datasource:
     username: root
-    password: Zjx20060208
+    password: 12345678
     url: jdbc:mysql://localhost:3306/esp32_iot?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
     driver-class-name: com.mysql.cj.jdbc.Driver
-
-  # 将 influx 移到了 spring 节点下方，严格保持两格缩进
+  # InfluxDB 时序数据库配置
   influx:
     url: http://localhost:8086
     token: "8SZrdXwX4H_1TtPnlgw-dfZ7nRiiT_HXiX_2KrOD3dkyKuYnP9TI1exiTTy8fo1epPY-nULwBLKo9meTFm1bJQ=="

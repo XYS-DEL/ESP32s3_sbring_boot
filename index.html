@@ -35,7 +35,7 @@
     </div>
 
     <script>
-        // 1. 拨号连接到咱们 Spring Boot 的广播塔
+        // 1. 拨号连接到Spring Boot 的广播
         const ws = new WebSocket('ws://localhost:8080/ws/telemetry');
         const logBox = document.getElementById('logBox');
 
@@ -43,7 +43,7 @@
             logBox.innerHTML += '<div>[WebSocket] ? 连接成功，等待设备上报数据...</div>';
         };
 
-        // 2. 核心逻辑：只要收到 Spring Boot 推来的数据，立刻更新网页 DOM！
+        // 2. 只要收到 Spring Boot 推来的数据，立刻更新网页 DOM
         ws.onmessage = function(event) {
             // 解析 Spring Boot 发来的 JSON
             const packet = JSON.parse(event.data);
