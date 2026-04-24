@@ -20,7 +20,7 @@ spring:
   # InfluxDB 时序数据库配置
   influx:
     url: http://localhost:8086
-    token: "8SZrdXwX4H_1TtPnlgw-dfZ7nRiiT_HXiX_2KrOD3dkyKuYnP9TI1exiTTy8fo1epPY-nULwBLKo9meTFm1bJQ=="
+    token: "${INFLUX_TOKEN:your_influxdb_token_here}"
     org: iot_org
     bucket: esp32_telemetry
 

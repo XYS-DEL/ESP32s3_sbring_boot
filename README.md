@@ -1,7 +1,9 @@
 # 🚀 ESP32-S3 IoT Central Command (Java Backend)
 
-> 这是一个专为 ESP32-S3 节点量身打造的 Java Spring Boot 物联网后端中台。采用非阻塞的异步事件驱动架构与 Spring Integration 管道，完美接管边缘设备的双向全双工通信、高可用数据流转以及 LWT 遗嘱生命周期追踪。
+## esp32硬件仓库地址：https://github.com/XYS-DEL/ESP32-S3-MQTT-Boilerplate
 
+> 这是一个专为 ESP32-S3 节点量身打造的 Java Spring Boot 物联网后端中台。采用非阻塞的异步事件驱动架构与 Spring Integration 管道，完美接管边缘设备的双向全双工通信、高可用数据流转以及 LWT 遗嘱生命周期追踪。
+> 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Language](https://img.shields.io/badge/Language-Java%2021%20LTS-b07219.svg)](https://openjdk.org/projects/jdk/21/)
 [![Framework](https://img.shields.io/badge/Framework-Spring%20Boot%203.x-brightgreen.svg)](https://spring.io/projects/spring-boot)
@@ -10,7 +12,7 @@
 
 ## 📖 项目简介 (Overview)
 
-本项目是为 ESP32-S3 工业级物联网节点量身打造的 Java Spring Boot 后端中台。  
+本项目是为 ESP32-S3 物联网节点量身打造的 Java Spring Boot 后端中台。  
 系统采用非阻塞的异步事件驱动架构，通过 MQTT 协议与边缘设备进行全双工通信，负责设备生命周期管理、海量遥测数据接入、远程指令下发以及 FOTA 固件统筹分发。
 
 目前系统已对接运行着 FreeRTOS 与 LittleFS 离线缓存机制的 ESP32-S3 硬件，具备极高的网络容灾与反假死能力，并已全面打通双数据库持久化架构。

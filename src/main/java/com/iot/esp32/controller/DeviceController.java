@@ -27,7 +27,7 @@ public class DeviceController {
     @GetMapping("/{mac}/color")
     public String setDeviceColor(@PathVariable("mac") String mac, @RequestParam int r, @RequestParam int g, @RequestParam int b) {
         deviceControlService.changeDeviceColor(mac, r, g, b);
-        return "🎯 指令已发送至设备: " + mac;
+        return "指令已发送至设备: " + mac;
     }
 
     /**
@@ -53,9 +53,8 @@ public class DeviceController {
             @RequestParam String fileName) {
 
         // 动态拼装局域网下载地址 (注意：在真实服务器上，这里应替换为服务器的公网 IP 或域名)
-        // 这里的 10.0.0.x 是你电脑在局域网的 IP，ESP32 才能通过这个 IP 找到你电脑！
-        // 请按需将 192.168.x.x 替换为你的真实开发机局域网 IP
-        String localIp = "192.168.31.100";
+        // 这里是你电脑在局域网的 IP，ESP32 能通过这个 IP 找到你电脑
+        String localIp = " IP 地址";
         String downloadUrl = "http://" + localIp + ":8080/fw/" + fileName;
 
         deviceControlService.sendOtaCommand(mac, version, downloadUrl);
