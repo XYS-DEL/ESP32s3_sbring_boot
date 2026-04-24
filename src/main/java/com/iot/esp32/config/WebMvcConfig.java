@@ -1,24 +1,29 @@
-/*
 package com.iot.esp32.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.io.File;
+
+/**
+ * Web 静态资源配置
+ * 作用：将项目根目录下的 firmware 文件夹，映射为可供 ESP32 下载的公网 URL
+ */
+@Slf4j
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    @Value("${iot.storage.local.upload-dir}")
-    private String uploadDir;
-
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 核心：把 URL 路径 /fw/download/** 映射到硬盘的 uploadDir 文件夹
-        // 注意：file: 前缀表示这是一个物理磁盘路径
-        String path = "file:" + new File(uploadDir).getAbsolutePath() + "/";
-        registry.addResourceHandler("/fw/download/**")
-                .addResourceLocations(path);
+        // 确保项目根目录下有一个名叫 firmware 的文件夹
+        String firmwarePath = System.getProperty("user.dir") + File.separator + "firmware" + File.separator;
+
+        // 映射规则：当访问 http://localhost:8080/fw/xxx.bin 时，直接去本地 firmware 文件夹拿文件
+        registry.addResourceHandler("/fw/**")
+                .addResourceLocations("file:" + firmwarePath);
+
+        log.info("[FOTA 模块] 固件静态托管目录已挂载: {}", firmwarePath);
     }
 }
- */

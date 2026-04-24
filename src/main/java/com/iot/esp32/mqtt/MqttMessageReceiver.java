@@ -58,6 +58,8 @@ public class MqttMessageReceiver {
                 log.info("设备 [{}] 遥测数据 -> 温度: {}°C | 信号: {}dBm | 内存: {}KB",
                         macAddress, dto.getTemp(), dto.getRssi(), dto.getHeapKb());
                 telemetryService.saveTelemetry(macAddress, dto.getTemp(), dto.getHeapKb(), dto.getRssi());
+                String wsMessage = String.format("{\"mac\":\"%s\", \"data\":%s}", macAddress, payload);
+                com.iot.esp32.websocket.WebSocketServer.broadcastMessage(wsMessage);
             }
 
         } catch (Exception e) {

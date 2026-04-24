@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>?? ESP32 实时数字孪生大屏</title>
+    <style>
+        body { background-color: #121212; color: #00ff00; font-family: 'Courier New', Courier, monospace; padding: 40px; }
+        h1 { color: #ffffff; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .card { background-color: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 20px; margin-top: 20px; width: 400px; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
+        .data-row { font-size: 1.2rem; margin: 10px 0; }
+        .highlight { color: #ffeb3b; font-weight: bold; font-size: 1.5rem; }
+        #status { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; }
+        .online { background-color: #2e7d32; color: white; }
+        .offline { background-color: #c62828; color: white; }
+        .log-box { margin-top: 30px; background: #000; padding: 15px; border: 1px solid #444; height: 200px; overflow-y: auto; color: #00bcd4; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <h1>?? 工业级 IoT 实时遥测中枢</h1>
+    
+    <div class="card" id="deviceCard">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="margin: 0; color: #fff;">设备: <span id="macDisplay">等待连接...</span></h2>
+            <span id="status" class="offline">离线</span>
+        </div>
+        <hr style="border-color: #333;">
+        <div class="data-row">??? 核心温度: <span id="temp" class="highlight">--</span> °C</div>
+        <div class="data-row">?? 信号强度: <span id="rssi" class="highlight">--</span> dBm</div>
+        <div class="data-row">?? 剩余内存: <span id="heap" class="highlight">--</span> KB</div>
+    </div>
+
+    <div class="log-box" id="logBox">
+        <div>[System] 正在连接 WebSocket 广播集群...</div>
+    </div>
+
+    <script>
+        // 1. 拨号连接到咱们 Spring Boot 的广播塔
+        const ws = new WebSocket('ws://localhost:8080/ws/telemetry');
+        const logBox = document.getElementById('logBox');
+
+        ws.onopen = function() {
+            logBox.innerHTML += '<div>[WebSocket] ? 连接成功，等待设备上报数据...</div>';
+        };
+
+        // 2. 核心逻辑：只要收到 Spring Boot 推来的数据，立刻更新网页 DOM！
+        ws.onmessage = function(event) {
+            // 解析 Spring Boot 发来的 JSON
+            const packet = JSON.parse(event.data);
+            const mac = packet.mac;
+            const data = packet.data;
+
+            // 打印流水的底层日志
+            logBox.innerHTML = `<div>[${new Date().toLocaleTimeString()}] 收到报文: ${JSON.stringify(data)}</div>` + logBox.innerHTML;
+
+            // 更新仪表盘的 UI
+            document.getElementById('macDisplay').innerText = mac;
+            
+            if (data.status === 'offline') {
+                document.getElementById('status').innerText = '断开连接 (LWT)';
+                document.getElementById('status').className = 'offline';
+            } else {
+                document.getElementById('status').innerText = '在线采集';
+                document.getElementById('status').className = 'online';
+                
+                // 只有遥测数据才更新具体的数值，避免报错
+                if(data.temp !== undefined) {
+                    document.getElementById('temp').innerText = data.temp.toFixed(1);
+                    document.getElementById('rssi').innerText = data.rssi;
+                    document.getElementById('heap').innerText = data.heap_kb;
+                }
+            }
+        };
+
+        ws.onclose = function() {
+            logBox.innerHTML += '<div style="color:red;">[WebSocket] ? 连接已断开！请检查后端是否启动。</div>';
+        };
+    </script>
+</body>
+</html>

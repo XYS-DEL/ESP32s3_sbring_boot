@@ -41,4 +41,23 @@ public class DeviceController {
         // 2. 用刚才写的统一包装外壳包起来返回给前端
         return Result.success(deviceList);
     }
+    /**
+     * 触发设备进行 OTA 空中升级
+     * 测试示例: GET http://localhost:8080/api/device/E83DC1FA71BC/ota?version=V2.0&fileName=firmware_v2.bin
+     */
+    @GetMapping("/{mac}/ota")
+    public Result<String> triggerOta(
+            @PathVariable("mac") String mac,
+            @RequestParam String version,
+            @RequestParam String fileName) {
+
+        // 动态拼装局域网下载地址 (注意：在真实服务器上，这里应替换为服务器的公网 IP 或域名)
+        // 这里的 10.0.0.x 是你电脑在局域网的 IP，ESP32 才能通过这个 IP 找到你电脑！
+        // 请按需将 192.168.x.x 替换为你的真实开发机局域网 IP
+        String localIp = "192.168.31.100";
+        String downloadUrl = "http://" + localIp + ":8080/fw/" + fileName;
+
+        deviceControlService.sendOtaCommand(mac, version, downloadUrl);
+        return Result.success("FOTA 升级指令已定向推送至: " + mac);
+    }
 }
